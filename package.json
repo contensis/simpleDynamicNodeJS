@@ -4,6 +4,9 @@
   "main": "index.js",
   "author": "DanielDeutsch <deudan1010@gmail.com>",
   "license": "none",
+  "engines": {
+    "node": ">=8"
+  },
   "dependencies": {
     "flow-bin": "^0.45.0"
   }

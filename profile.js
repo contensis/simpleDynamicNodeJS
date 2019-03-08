@@ -1,51 +1,54 @@
-var EventEmitter = require("events").EventEmitter;
-var https = require("https");
-var http = require("http");
-var util = require("util");
+const EventEmitter = require("events").EventEmitter;
+const https = require("https");
+const http = require("http");
 
 /**
  * An EventEmitter to get a Treehouse students profile.
  * @param username
  * @constructor
  */
-function Profile(username) {
+class Profile extends EventEmitter {
+    constructor() {
+        super();
+    }
 
-    EventEmitter.call(this);
+    get(username) {
+        let _this = this;
+        //Connect to the API URL (https://teamtreehouse.com/username.json)
+        let request = https.get("https://teamtreehouse.com/" + username + ".json", response => {
+            let body = "";
 
-    profileEmitter = this;
-
-    //Connect to the API URL (https://teamtreehouse.com/username.json)
-    var request = https.get("https://teamtreehouse.com/" + username + ".json", function (response) {
-        var body = "";
-
-        if (response.statusCode !== 200) {
-            request.abort();
-            //Status Code Error
-            profileEmitter.emit("error", new Error("There was an error getting the profile for " + username + ". (" + http.STATUS_CODES[response.statusCode] + ")"));
-        }
-
-        //Read the data
-        response.on('data', function (chunk) {
-            body += chunk;
-            profileEmitter.emit("data", chunk);
-        });
-
-        response.on('end', function () {
-            if (response.statusCode === 200) {
-                try {
-                    //Parse the data
-                    var profile = JSON.parse(body);
-                    profileEmitter.emit("end", profile);
-                } catch (error) {
-                    profileEmitter.emit("error", error);
-                }
+            if (response.statusCode !== 200) {
+                request.abort();
+                //Status Code Error
+                _this.emit(
+                    "error",
+                    new Error("There was an error getting the profile for " + username + ". (" + http.STATUS_CODES[response.statusCode] + ")"));
             }
-        }).on("error", function (error) {
-            profileEmitter.emit("error", error);
-        });
-    });
-}
 
-util.inherits(Profile, EventEmitter);
+            //Read the data
+            response.on('data', chunk => {
+                body += chunk;
+                _this.emit("data", chunk);
+            });
+
+            response
+                .on('end', () => {
+                    if (response.statusCode === 200) {
+                        try {
+                            //Parse the data
+                            let profile = JSON.parse(body);
+                            _this.emit("end", profile);
+                        } catch (error) {
+                            _this.emit("error", error);
+                        }
+                    }
+                })
+                .on("error", error => {
+                    _this.emit("error", error);
+                });
+        });
+    }
+}
 
 module.exports = Profile;
